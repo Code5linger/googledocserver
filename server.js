@@ -22,7 +22,7 @@ mongoose.connect(uri);
 
 // Express app setup
 
-app.use(cors()); // You can configure CORS more strictly if needed
+app.use(cors());
 app.use(express.json());
 
 // HTTP server for Express + Socket.IO
@@ -31,8 +31,12 @@ const server = http.createServer(app);
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173'],
+    origin: [
+      'http://localhost:5173', // dev
+      'https://docclone-53c32.web.app', // deployed frontend
+    ],
     methods: ['GET', 'POST'],
+    credentials: true,
   },
 });
 
