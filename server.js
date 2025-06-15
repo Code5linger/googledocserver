@@ -11,32 +11,26 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const Document = require('./Document');
-
-// MongoDB URI
+// MongoDB URI (use Render's environment variables)
 const uri =
   process.env.MONGO_URI ||
   'mongodb+srv://googledocsclone:googledocsclone@cluster0.mhtwx9f.mongodb.net/google-docs-clone?retryWrites=true&w=majority';
-
 mongoose.connect(uri);
 
-// Express app setup
+// Document model
+const Document = require('./Document');
 
-app.use(cors());
-app.use(express.json());
-
-// HTTP server for Express + Socket.IO
+// Create HTTP server for Socket.IO
 const server = http.createServer(app);
 
-// Socket.IO setup
+// Setup Socket.IO
 const io = new Server(server, {
   cors: {
     origin: [
-      'http://localhost:5173', // dev
-      'https://docclone-53c32.web.app', // deployed frontend
+      'http://localhost:5173',
+      'https://docclone-53c32.web.app', // your frontend
     ],
     methods: ['GET', 'POST'],
-    credentials: true,
   },
 });
 
@@ -65,17 +59,14 @@ async function findOrCreateDocument(id) {
   return await Document.create({ _id: id, data: defaultValue });
 }
 
-// Basic route
+// Root route
 app.get('/', (req, res) => {
-  res.send('Google Docs Clone Backend is running');
+  res.send('Google Docs Clone Backend is running!');
 });
 
-// Start server
+// Use Render-assigned port or default
 const PORT = process.env.PORT || 5174;
-server.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
