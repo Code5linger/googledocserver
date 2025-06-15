@@ -1,24 +1,37 @@
+const express = require('express');
 const mongoose = require('mongoose');
-const Document = require('./Document');
 const { Server } = require('socket.io');
+const http = require('http');
+const cors = require('cors');
 require('dotenv').config();
 
-// MongoDB Atlas connection string
-const uri = `mongodb+srv://googledocsclone:googledocsclone@cluster0.mhtwx9f.mongodb.net/google-docs-clone?retryWrites=true&w=majority&appName=Cluster0`;
+const app = express();
 
-// Mongoose connection
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+const Document = require('./Document');
+
+// MongoDB URI
+const uri =
+  process.env.MONGO_URI ||
+  'mongodb+srv://googledocsclone:googledocsclone@cluster0.mhtwx9f.mongodb.net/google-docs-clone?retryWrites=true&w=majority';
+
 mongoose.connect(uri);
 
-const io = new Server(5174, {
+// Express app setup
+
+app.use(cors()); // You can configure CORS more strictly if needed
+app.use(express.json());
+
+// HTTP server for Express + Socket.IO
+const server = http.createServer(app);
+
+// Socket.IO setup
+const io = new Server(server, {
   cors: {
-    origin: (origin, callback) => {
-      const allowedOrigins = ['http://localhost:5173'];
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: ['http://localhost:5173'],
     methods: ['GET', 'POST'],
   },
 });
@@ -43,9 +56,22 @@ io.on('connection', (socket) => {
 
 async function findOrCreateDocument(id) {
   if (id == null) return;
-
   const existing = await Document.findById(id);
   if (existing) return existing;
-
   return await Document.create({ _id: id, data: defaultValue });
 }
+
+// Basic route
+app.get('/', (req, res) => {
+  res.send('Google Docs Clone Backend is running');
+});
+
+// Start server
+const PORT = process.env.PORT || 5174;
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
+
+app.get('/', (req, res) => {
+  res.send('Hello World!');
+});
